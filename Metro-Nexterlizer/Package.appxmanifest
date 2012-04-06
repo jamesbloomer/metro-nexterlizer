@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
+
+  <Identity Name="048dab8e-fc2a-413f-bf5d-837ada06602f"
+            Publisher="CN=James"
+            Version="1.0.0.0" />
+
+  <Properties>
+    <DisplayName>Metro-Nexterlizer</DisplayName>
+    <PublisherDisplayName>James</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Metro-Nexterlizer</Description>
+  </Properties>
+
+  <Prerequisites>
+    <OSMinVersion>6.2</OSMinVersion>
+    <OSMaxVersionTested>6.2</OSMaxVersionTested>
+  </Prerequisites>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+        Executable="$targetnametoken$.exe"
+        EntryPoint="Metro_Nexterlizer.App">
+        <VisualElements
+            DisplayName="Metro-Nexterlizer"
+            Logo="Assets\Logo.png"
+            SmallLogo="Assets\SmallLogo.png"
+            Description="Metro-Nexterlizer"
+            ForegroundText="light"
+            BackgroundColor="#222222">
+            <DefaultTile ShowName="allLogos" />
+            <SplashScreen Image="Assets\SplashScreen.png" />
+        </VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>
