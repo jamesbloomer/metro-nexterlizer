@@ -38,6 +38,7 @@ namespace Metro_Nexterlizer
         private void Next_Click(object sender, RoutedEventArgs e)
         {
             // TODO use commands
+
         }
     }
 }
