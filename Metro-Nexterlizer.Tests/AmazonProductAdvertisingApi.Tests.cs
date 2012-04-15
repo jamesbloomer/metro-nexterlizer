@@ -45,5 +45,52 @@ namespace Metro_Nexterlizer.Tests
             var amz = new AmazonProductAdvertisingApi();
             Assert.AreEqual("GET\necs.amazonaws.co.uk\n/onca/xml\nA=B&C=D", amz.GetStringToSign(queryParams));
         }
+
+        [TestMethod]
+        public void WhenCallingGetCompleteUrlShouldReturnCorrectString()
+        {
+            var queryParams = new Dictionary<string, string>();
+            queryParams["A"] = "B";
+            queryParams["C"] = "D";
+
+            var domain = "http://domain.com/x/y/";
+            var hmac = "+HMAC=";
+
+            var amz = new AmazonProductAdvertisingApi();
+            Assert.AreEqual(domain + "A=B&C=D&Signature=%2bHMAC%3d", amz.GetCompleteUrl(domain, queryParams, hmac));
+        }
+
+        [TestMethod]
+        public void WhenCallingGetQueryParamsShouldReturnDictionaryWithCorrectParams()
+        {
+            var amz = new AmazonProductAdvertisingApi();
+            var expected = new SortedDictionary<string, string>();
+            expected["Service"] = "AWSECommerceService";
+            expected["AWSAccessKeyId"] = "ACCES KEY";
+            expected["AssociateTag"] = "jamesthebloom-20";
+            expected["Operation"] = "ItemSearch";
+            expected["SearchIndex"] = "Books";
+            expected["Keywords"] = "SEARCHTEXT";
+            expected["ResponseGroup"] = "Similarities";
+            expected["Timestamp"] = DateTime.Now.ToString(); // need  [YYYY-MM-DDThh:mm:ssZ]
+            expected["Version"] = "2011-08-01";
+
+            var queryParams = amz.GetQueryParams("SEARCHTEXT");
+            Assert.IsTrue(queryParams.SequenceEqual(expected));
+        }
+
+        [TestMethod]
+        public void UrlEncodeQueryParamsShouldEncodeValuesCorrectly()
+        {
+            var amz = new AmazonProductAdvertisingApi();
+            var queryParams = new SortedDictionary<string, string>();
+            queryParams["A"] = " ";
+            queryParams["B"] = "+";
+            queryParams["C"] = "=";
+            var encodedQueryParams = amz.UrlEncodeQueryParams(queryParams);
+            Assert.AreEqual("+", encodedQueryParams["A"]);
+            Assert.AreEqual("%2b", encodedQueryParams["B"]);
+            Assert.AreEqual("%3d", encodedQueryParams["C"]);
+        }
     }
 }
