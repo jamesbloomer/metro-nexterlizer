@@ -9,17 +9,23 @@ namespace Metro_Nexterlizer.Tests
     [TestClass]
     public class AmazonProductAdvertisingApiTests
     {
+        public AmazonProductAdvertisingApi Amazon { get; set; }
+
+        [TestInitialize]
+        public void Init()
+        {
+            this.Amazon = new AmazonProductAdvertisingApi("SECRETACCESSKEY", "ACCESSKEY");
+        }
+
         [TestMethod]
         public void WhenConstructingShouldNotThrow()
         {
-            new AmazonProductAdvertisingApi();
         }
 
         [TestMethod]
         public void WhenSigningWithHMACShouldReturnCorrectString()
         {
-            var amz = new AmazonProductAdvertisingApi();
-            var signedString = amz.CreateHMAC("TESTMESSAGE", "HMAC_SHA256", "SECRETKEY");
+            var signedString = this.Amazon.CreateHMAC("TESTMESSAGE", "HMAC_SHA256", "SECRETKEY");
             Assert.AreEqual("wI+7tU9dsIrdBA6IwtXsvX5VJuBTHClD9THAea8M6UM=", signedString);
         }
 
@@ -30,8 +36,7 @@ namespace Metro_Nexterlizer.Tests
             queryParams["A"] = "B";
             queryParams["C"] = "D";
 
-            var amz = new AmazonProductAdvertisingApi();
-            var flattenedQueryParams = amz.GetFlattenedParams(queryParams);
+            var flattenedQueryParams = this.Amazon.GetFlattenedParams(queryParams);
             Assert.AreEqual("A=B&C=D", flattenedQueryParams);
         }
 
@@ -42,8 +47,7 @@ namespace Metro_Nexterlizer.Tests
             queryParams["A"] = "B";
             queryParams["C"] = "D";
 
-            var amz = new AmazonProductAdvertisingApi();
-            Assert.AreEqual("GET\necs.amazonaws.co.uk\n/onca/xml\nA=B&C=D", amz.GetStringToSign(queryParams));
+            Assert.AreEqual("GET\necs.amazonaws.co.uk\n/onca/xml\nA=B&C=D", this.Amazon.GetStringToSign(queryParams));
         }
 
         [TestMethod]
@@ -56,41 +60,58 @@ namespace Metro_Nexterlizer.Tests
             var domain = "http://domain.com/x/y/";
             var hmac = "+HMAC=";
 
-            var amz = new AmazonProductAdvertisingApi();
-            Assert.AreEqual(domain + "A=B&C=D&Signature=%2bHMAC%3d", amz.GetCompleteUrl(domain, queryParams, hmac));
+            Assert.AreEqual(domain + "A=B&C=D&Signature=%2bHMAC%3d", this.Amazon.GetCompleteUrl(domain, queryParams, hmac));
         }
 
         [TestMethod]
         public void WhenCallingGetQueryParamsShouldReturnDictionaryWithCorrectParams()
         {
-            var amz = new AmazonProductAdvertisingApi();
             var expected = new SortedDictionary<string, string>();
             expected["Service"] = "AWSECommerceService";
-            expected["AWSAccessKeyId"] = "ACCES KEY";
+            expected["AWSAccessKeyId"] = "ACCESSKEY";
             expected["AssociateTag"] = "jamesthebloom-20";
             expected["Operation"] = "ItemSearch";
             expected["SearchIndex"] = "Books";
             expected["Keywords"] = "SEARCHTEXT";
             expected["ResponseGroup"] = "Similarities";
-            expected["Timestamp"] = DateTime.Now.ToString(); // need  [YYYY-MM-DDThh:mm:ssZ]
+            var now = DateTime.Now;
+            this.Amazon.Now = () => { return now; };
+            expected["Timestamp"] = now.ToString("yyyy-MM-ddThh:mm:ssZz"); 
             expected["Version"] = "2011-08-01";
 
-            var queryParams = amz.GetQueryParams("SEARCHTEXT");
+            var queryParams = this.Amazon.GetQueryParams("SEARCHTEXT");
             Assert.IsTrue(queryParams.SequenceEqual(expected));
         }
 
         [TestMethod]
         public void UrlEncodeQueryParamsShouldEncodeValuesCorrectly()
         {
-            var amz = new AmazonProductAdvertisingApi();
             var queryParams = new SortedDictionary<string, string>();
             queryParams["A"] = " ";
             queryParams["B"] = "+";
             queryParams["C"] = "=";
-            var encodedQueryParams = amz.UrlEncodeQueryParams(queryParams);
+            var encodedQueryParams = this.Amazon.UrlEncodeQueryParams(queryParams);
             Assert.AreEqual("+", encodedQueryParams["A"]);
             Assert.AreEqual("%2b", encodedQueryParams["B"]);
             Assert.AreEqual("%3d", encodedQueryParams["C"]);
+        }
+
+        [TestMethod]
+        public void GetQueryParamsShouleReturnCorrectParams()
+        {
+            var now = DateTime.Now;
+            this.Amazon.Now = () => { return now; };
+
+            var queryParams = this.Amazon.GetQueryParams("SEARCHTEXT");
+            Assert.AreEqual("AWSECommerceService", queryParams["Service"]);
+            Assert.AreEqual("ACCESSKEY", queryParams["AWSAccessKeyId"]);
+            Assert.AreEqual("jamesthebloom-20", queryParams["AssociateTag"]);
+            Assert.AreEqual("ItemSearch", queryParams["Operation"]);
+            Assert.AreEqual("Books", queryParams["SearchIndex"]);
+            Assert.AreEqual("SEARCHTEXT", queryParams["Keywords"]);
+            Assert.AreEqual("Similarities", queryParams["ResponseGroup"]);
+            Assert.AreEqual(now.ToString("yyyy-MM-ddThh:mm:ssZz"), queryParams["Timestamp"]); 
+            Assert.AreEqual("2011-08-01", queryParams["Version"]);
         }
     }
 }

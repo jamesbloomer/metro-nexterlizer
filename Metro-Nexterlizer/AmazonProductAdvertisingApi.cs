@@ -4,17 +4,40 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
+    using System.Net.Http;
+    using System.Threading.Tasks;
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Core;
 
     public class AmazonProductAdvertisingApi
     {
+        public AmazonProductAdvertisingApi(string secretAccessKey, string accessKey)
+        {
+            this.SecretAccessKey = secretAccessKey;
+            this.AccessKey = accessKey;
+        }
+
+        internal Func<DateTime> Now = () => DateTime.Now;
+
+        private string SecretAccessKey { get; set; }
+
+        private string AccessKey { get; set; }
+
+        public async Task<string> CallAmazon(string searchText)
+        {
+            HttpClient httpClient = new HttpClient();
+            var requestUrl = this.GetUrlForSimilarItemSearch(searchText);
+            var response = await httpClient.GetAsync(requestUrl);
+            var ret = await response.Content.ReadAsStringAsync();
+            return ret;
+        }
+
         public string GetUrlForSimilarItemSearch(string searchText)
         {
             var queryParams = this.GetQueryParams(searchText);
             queryParams = this.UrlEncodeQueryParams(queryParams);
             var urlToSign = this.GetStringToSign(queryParams);
-            var hmac = this.CreateHMAC(urlToSign, "HMAC_SHA256", "SECRET ACCESS KEY");
+            var hmac = this.CreateHMAC(urlToSign, "HMAC_SHA256", this.SecretAccessKey);
             var baseUkUrl = @"http://ecs.amazonaws.co.uk/onca/xml";
             var completeUrl = this.GetCompleteUrl(baseUkUrl, queryParams, hmac);
             return null;        
@@ -35,13 +58,13 @@
         {
             var queryParams = new SortedDictionary<string, string>();
             queryParams["Service"] = "AWSECommerceService";
-            queryParams["AWSAccessKeyId"] = "ACCES KEY";
+            queryParams["AWSAccessKeyId"] = this.AccessKey;
             queryParams["AssociateTag"] = "jamesthebloom-20";
             queryParams["Operation"] = "ItemSearch";
             queryParams["SearchIndex"] = "Books";
             queryParams["Keywords"] = searchText;
             queryParams["ResponseGroup"] = "Similarities";
-            queryParams["Timestamp"] = DateTime.Now.ToString(); // need  [YYYY-MM-DDThh:mm:ssZ]
+            queryParams["Timestamp"] = this.Now().ToString("yyyy-MM-ddThh:mm:ssZz"); 
             queryParams["Version"] = "2011-08-01";
             return queryParams;
         }
