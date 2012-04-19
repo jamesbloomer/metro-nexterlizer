@@ -30,6 +30,14 @@ namespace Metro_Nexterlizer.Tests
         }
 
         [TestMethod]
+        public void WhenSigningWithHMACShouldReturnCorrectString2()
+        {
+            this.Amazon.Country = AmazonProductAdvertisingApi.AmazonCountry.US;
+            var signedString = this.Amazon.CreateHMAC(@"GET\nwebservices.amazon.com\n/onca/xml\nAWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&ItemId=0679722769&Operation=ItemLookup&ResponseGroup=ItemAttributes%2COffers%2CImages%2CReviews&Service=AWSECommerceService&Timestamp=2009-01-01T12%3A00%3A00Z&Version=2009-01-06", "HMAC_SHA256", "1234567890");
+            Assert.AreEqual("Nace%2BU3Az4OhN7tISqgs1vdLBHBEijWcBeCqL5xN9xg%3D", signedString);
+        }
+
+        [TestMethod]
         public void WhenFlatteningQueryParamsShouldReturnCorrectString()
         {
             var queryParams = new Dictionary<string, string>();
@@ -74,9 +82,9 @@ namespace Metro_Nexterlizer.Tests
             expected["SearchIndex"] = "Books";
             expected["Keywords"] = "SEARCHTEXT";
             expected["ResponseGroup"] = "Similarities";
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             this.Amazon.Now = () => { return now; };
-            expected["Timestamp"] = now.ToString("yyyy-MM-ddThh:mm:ssZz"); 
+            expected["Timestamp"] = now.ToString("yyyy-MM-ddTHH:mm:ssZ"); 
             expected["Version"] = "2011-08-01";
 
             var queryParams = this.Amazon.GetQueryParams("SEARCHTEXT");
@@ -99,7 +107,7 @@ namespace Metro_Nexterlizer.Tests
         [TestMethod]
         public void GetQueryParamsShouleReturnCorrectParams()
         {
-            var now = DateTime.Now;
+            var now = new DateTime(2012, 4, 18, 22, 36, 3);
             this.Amazon.Now = () => { return now; };
 
             var queryParams = this.Amazon.GetQueryParams("SEARCHTEXT");
@@ -110,7 +118,7 @@ namespace Metro_Nexterlizer.Tests
             Assert.AreEqual("Books", queryParams["SearchIndex"]);
             Assert.AreEqual("SEARCHTEXT", queryParams["Keywords"]);
             Assert.AreEqual("Similarities", queryParams["ResponseGroup"]);
-            Assert.AreEqual(now.ToString("yyyy-MM-ddThh:mm:ssZz"), queryParams["Timestamp"]); 
+            Assert.AreEqual(now.ToString("2012-04-18T22:36:03Z"), queryParams["Timestamp"]); 
             Assert.AreEqual("2011-08-01", queryParams["Version"]);
         }
     }

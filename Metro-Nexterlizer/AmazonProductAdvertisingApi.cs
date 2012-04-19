@@ -11,17 +11,47 @@
 
     public class AmazonProductAdvertisingApi
     {
+        public enum AmazonCountry
+        {
+            UK,
+            US
+        }
+
         public AmazonProductAdvertisingApi(string secretAccessKey, string accessKey)
         {
             this.SecretAccessKey = secretAccessKey;
             this.AccessKey = accessKey;
+            this.Country = AmazonCountry.UK;
         }
 
-        internal Func<DateTime> Now = () => DateTime.Now;
+        internal Func<DateTime> Now = () => DateTime.UtcNow;
+
+        public AmazonCountry Country 
+        {
+            set
+            {
+                switch (value)
+                {
+                    case AmazonCountry.US:
+                        {
+                            this.BaseUrl = "http://ecs.amazonaws.co.uk/onca/xml?";
+                            break;
+                        }
+
+                    default:
+                        {
+                            this.BaseUrl = "http://ecs.amazonaws.co.uk/onca/xml?";
+                            break;
+                        }
+                }
+            }
+        }
 
         private string SecretAccessKey { get; set; }
 
         private string AccessKey { get; set; }
+
+        private string BaseUrl { get; set; }
 
         public async Task<string> CallAmazon(string searchText)
         {
@@ -32,15 +62,14 @@
             return ret;
         }
 
-        public string GetUrlForSimilarItemSearch(string searchText)
+        internal string GetUrlForSimilarItemSearch(string searchText)
         {
             var queryParams = this.GetQueryParams(searchText);
             queryParams = this.UrlEncodeQueryParams(queryParams);
             var urlToSign = this.GetStringToSign(queryParams);
             var hmac = this.CreateHMAC(urlToSign, "HMAC_SHA256", this.SecretAccessKey);
-            var baseUkUrl = @"http://ecs.amazonaws.co.uk/onca/xml";
-            var completeUrl = this.GetCompleteUrl(baseUkUrl, queryParams, hmac);
-            return null;        
+            var completeUrl = this.GetCompleteUrl(this.BaseUrl, queryParams, hmac);
+            return completeUrl;        
         }
 
         internal IDictionary<string, string> UrlEncodeQueryParams(IDictionary<string, string> queryParams)
@@ -64,8 +93,14 @@
             queryParams["SearchIndex"] = "Books";
             queryParams["Keywords"] = searchText;
             queryParams["ResponseGroup"] = "Similarities";
-            queryParams["Timestamp"] = this.Now().ToString("yyyy-MM-ddThh:mm:ssZz"); 
+            queryParams["Timestamp"] = this.Now().ToString("yyyy-MM-ddTHH:mm:ssZ");
             queryParams["Version"] = "2011-08-01";
+
+            ////TESTING
+            ////queryParams["Operation"] = "ItemLookup";
+            ////queryParams["ItemId"] = "0679722769";
+            ////queryParams["ResponseGroup"]="ItemAttributes,Offers,Images,Reviews";
+            ////queryParams["Version"]="2009-01-06"; 
             return queryParams;
         }
 
@@ -78,7 +113,9 @@
 
         internal string GetStringToSign(IDictionary<string, string> queryParams)
         {
-            return "GET\necs.amazonaws.co.uk\n/onca/xml\n" + this.GetFlattenedParams(queryParams);
+            // http://ecs.amazonaws.co.uk/onca/xml?
+            var baseOfStringToSign = this.BaseUrl.Replace(@"http://", "GET\n").Replace(@"/onca/xml?", "\n/onca/xml\n");
+            return baseOfStringToSign + this.GetFlattenedParams(queryParams);
         }
 
         internal string CreateHMAC(
@@ -90,7 +127,6 @@
             var binaryMessage = CryptographicBuffer.ConvertStringToBinary(message, BinaryStringEncoding.Utf8);
             var binaryKeyMaterial = CryptographicBuffer.ConvertStringToBinary(keyMaterial, BinaryStringEncoding.Utf8);
             var hmacKey = macAlgorithmProvider.CreateKey(binaryKeyMaterial);
-
             var binarySignedMessage = CryptographicEngine.Sign(hmacKey, binaryMessage);
 
             if (binarySignedMessage.Length != macAlgorithmProvider.MacLength)

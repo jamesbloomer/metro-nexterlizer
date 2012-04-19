@@ -10,7 +10,7 @@
     <Grid Background="{StaticResource ApplicationPageBackgroundBrush}">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock Text="What did you read last?" FontSize="16" Margin="10" />
-            <TextBox HorizontalAlignment="Left" Width="280" Margin="10" />
+            <TextBox x:Name="SearchText" HorizontalAlignment="Left" Width="280" Margin="10" />
             <StackPanel Orientation="Horizontal" Margin="10">
                 <TextBlock Text="Let Nexterlizer suggest what's " FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <Button x:Name="Next" Content="next" Click="Next_Click" />

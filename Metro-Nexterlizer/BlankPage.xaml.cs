@@ -35,10 +35,13 @@ namespace Metro_Nexterlizer
         {
         }
 
-        private void Next_Click(object sender, RoutedEventArgs e)
+        private async void Next_Click(object sender, RoutedEventArgs e)
         {
             // TODO use commands
-
+            var secretAccessKey = "1234567890"; 
+            var accessKey = "AKIAIOSFODNN7EXAMPLE"; 
+            var amz = new AmazonProductAdvertisingApi(secretAccessKey, accessKey);
+            var xml = await amz.CallAmazon(this.SearchText.Text);
         }
     }
 }
