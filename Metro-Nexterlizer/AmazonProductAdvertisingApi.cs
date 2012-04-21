@@ -9,7 +9,7 @@
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Core;
 
-    public class AmazonProductAdvertisingApi
+    public class AmazonProductAdvertisingApi : IAmazonProductAdvertisingApi
     {
         public enum AmazonCountry
         {
@@ -60,6 +60,16 @@
             var response = await httpClient.GetAsync(requestUrl);
             var ret = await response.Content.ReadAsStringAsync();
             return ret;
+        }
+
+        public string GetSuggestionTextFromResponse(string xml)
+        {
+            return "Something else";
+        }
+
+        public Uri GetSuggestionUriFromResponse(string xml)
+        {
+            return new Uri("http://www.google.co.uk");
         }
 
         internal string GetUrlForSimilarItemSearch(string searchText)
@@ -113,7 +123,6 @@
 
         internal string GetStringToSign(IDictionary<string, string> queryParams)
         {
-            // http://ecs.amazonaws.co.uk/onca/xml?
             var baseOfStringToSign = this.BaseUrl.Replace(@"http://", "GET\n").Replace(@"/onca/xml?", "\n/onca/xml\n");
             return baseOfStringToSign + this.GetFlattenedParams(queryParams);
         }
@@ -121,11 +130,11 @@
         internal string CreateHMAC(
             string message,
             string algorithmName,
-            string keyMaterial)
+            string key)
         {
             MacAlgorithmProvider macAlgorithmProvider = MacAlgorithmProvider.OpenAlgorithm(algorithmName);
             var binaryMessage = CryptographicBuffer.ConvertStringToBinary(message, BinaryStringEncoding.Utf8);
-            var binaryKeyMaterial = CryptographicBuffer.ConvertStringToBinary(keyMaterial, BinaryStringEncoding.Utf8);
+            var binaryKeyMaterial = CryptographicBuffer.ConvertStringToBinary(key, BinaryStringEncoding.Utf8);
             var hmacKey = macAlgorithmProvider.CreateKey(binaryKeyMaterial);
             var binarySignedMessage = CryptographicEngine.Sign(hmacKey, binaryMessage);
 
