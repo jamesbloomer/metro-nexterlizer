@@ -79,7 +79,7 @@ namespace Metro_Nexterlizer
         private async void Next_Click(object sender, RoutedEventArgs e)
         {
             // TODO use commands
-            var secretAccessKey = "1234567890"; 
+            var secretAccessKey = "1234567890";
             var accessKey = "AKIAIOSFODNN7EXAMPLE";
             IAmazonProductAdvertisingApi amz = new AmazonProductAdvertisingApi(secretAccessKey, accessKey);
             var xml = await amz.CallAmazon(this.SearchText.Text);

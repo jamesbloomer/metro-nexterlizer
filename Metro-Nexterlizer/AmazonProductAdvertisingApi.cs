@@ -138,7 +138,9 @@
             var hmacKey = macAlgorithmProvider.CreateKey(binaryKeyMaterial);
             var binarySignedMessage = CryptographicEngine.Sign(hmacKey, binaryMessage);
 
-            if (binarySignedMessage.Length != macAlgorithmProvider.MacLength)
+            var verified = CryptographicEngine.VerifySignature(hmacKey, CryptographicBuffer.ConvertStringToBinary(message, BinaryStringEncoding.Utf8), binarySignedMessage);
+
+            if (binarySignedMessage.Length != macAlgorithmProvider.MacLength || !verified)
             {
                 throw new Exception("Error computing digest");
             }
