@@ -38,6 +38,7 @@ namespace Metro_Nexterlizer.Tests
             var hmac = this.Amazon.CreateHMAC(source, "HMAC_SHA256", "1234567890");
             var encoded = WebUtility.UrlEncode(hmac);
             Assert.AreEqual("Nace%2BU3Az4OhN7tISqgs1vdLBHBEijWcBeCqL5xN9xg%3D", encoded);
+            // M/y0+EAFFGaUAp4bWv/WEuXYah99pVsxvqtAuC8YN7I=
         }
 
         [TestMethod]
@@ -45,6 +46,15 @@ namespace Metro_Nexterlizer.Tests
         {
             string source = "GET\necs.amazonaws.co.uk\n/onca/xml\nAWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Actor=Johnny%20Depp&AssociateTag=mytag-20&Operation=ItemSearch&ResponseGroup=ItemAttributes%2COffers%2CImages%2CReviews%2CVariations&SearchIndex=DVD&Service=AWSECommerceService&Sort=salesrank&Timestamp=2009-01-01T12%3A00%3A00Z&Version=2009-01-0";
             var hmac = this.Amazon.CreateHMAC(source, "HMAC_SHA256", "1234567890");
+            var encoded = WebUtility.UrlEncode(hmac);
+            Assert.AreEqual("TuM6E5L9u%2FuNqOX09ET03BXVmHLVFfJIna5cxXuHxiU%3D", encoded);
+        }
+
+        [TestMethod]
+        public void WhenSigningWithHMAC2ShouldReturnCorrectString()
+        {
+            string source = "GET\necs.amazonaws.co.uk\n/onca/xml\nAWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Actor=Johnny%20Depp&AssociateTag=mytag-20&Operation=ItemSearch&ResponseGroup=ItemAttributes%2COffers%2CImages%2CReviews%2CVariations&SearchIndex=DVD&Service=AWSECommerceService&Sort=salesrank&Timestamp=2009-01-01T12%3A00%3A00Z&Version=2009-01-0";
+            var hmac = this.Amazon.CreateHMAC("AKIAIOSFODNN7EXAMPLE", "1234567890", source);
             var encoded = WebUtility.UrlEncode(hmac);
             Assert.AreEqual("TuM6E5L9u%2FuNqOX09ET03BXVmHLVFfJIna5cxXuHxiU%3D", encoded);
         }
@@ -132,6 +142,15 @@ namespace Metro_Nexterlizer.Tests
             Assert.AreEqual("Similarities", queryParams["ResponseGroup"]);
             Assert.AreEqual(now.ToString("2012-04-18T22:36:03Z"), queryParams["Timestamp"]); 
             Assert.AreEqual("2011-08-01", queryParams["Version"]);
+        }
+
+        [TestMethod]
+        public void UppercaseUrlEncodeShouldCorrectlyUppercaseEncodedCharacters()
+        {
+            Assert.AreEqual("abc%2Cdef", this.Amazon.UppercaseUrlEncode("abc%2cdef"));
+            Assert.AreEqual("%2Cdef", this.Amazon.UppercaseUrlEncode("%2cdef"));
+            Assert.AreEqual("abc%2C", this.Amazon.UppercaseUrlEncode("abc%2c"));
+            Assert.AreEqual("abc2cdef", this.Amazon.UppercaseUrlEncode("abc2cdef"));
         }
     }
 }

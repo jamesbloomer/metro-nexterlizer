@@ -5,9 +5,11 @@
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Core;
+    using Windows.Storage.Streams;
 
     public class AmazonProductAdvertisingApi : IAmazonProductAdvertisingApi
     {
@@ -116,7 +118,7 @@
 
         internal string GetCompleteUrl(string baseUrl, IDictionary<string, string> queryParams, string hmac)
         {
-            var htmlEncodedHmac = WebUtility.UrlEncode(hmac);
+            var htmlEncodedHmac = this.UppercaseUrlEncode(WebUtility.UrlEncode(hmac));
             var flattenedQueryParams = this.GetFlattenedParams(queryParams);
             return string.Format("{0}{1}&Signature={2}", baseUrl, flattenedQueryParams, htmlEncodedHmac);
         }
@@ -124,7 +126,14 @@
         internal string GetStringToSign(IDictionary<string, string> queryParams)
         {
             var baseOfStringToSign = this.BaseUrl.Replace(@"http://", "GET\n").Replace(@"/onca/xml?", "\n/onca/xml\n");
-            return baseOfStringToSign + this.GetFlattenedParams(queryParams);
+            var fullString =  baseOfStringToSign + this.GetFlattenedParams(queryParams);
+            return UppercaseUrlEncode(fullString);
+        }
+
+        internal string UppercaseUrlEncode(string lowercase)
+        {
+            Regex reg = new Regex(@"%[a-f0-9]{2}");
+            return reg.Replace(lowercase, m => m.Value.ToUpperInvariant());
         }
 
         internal string CreateHMAC(
@@ -133,9 +142,9 @@
             string key)
         {
             MacAlgorithmProvider macAlgorithmProvider = MacAlgorithmProvider.OpenAlgorithm(algorithmName);
-            var binaryMessage = CryptographicBuffer.ConvertStringToBinary(message, BinaryStringEncoding.Utf8);
             var binaryKeyMaterial = CryptographicBuffer.ConvertStringToBinary(key, BinaryStringEncoding.Utf8);
             var hmacKey = macAlgorithmProvider.CreateKey(binaryKeyMaterial);
+            var binaryMessage = CryptographicBuffer.ConvertStringToBinary(message, BinaryStringEncoding.Utf8);
             var binarySignedMessage = CryptographicEngine.Sign(hmacKey, binaryMessage);
 
             var verified = CryptographicEngine.VerifySignature(hmacKey, CryptographicBuffer.ConvertStringToBinary(message, BinaryStringEncoding.Utf8), binarySignedMessage);
